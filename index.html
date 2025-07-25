@@ -106,38 +106,63 @@
       margin-bottom: 2px;
       color: #384e5d;
     }
+    .music-btn {
+      margin-top: 5px;
+      background: #ffd700;
+      color: #244d68;
+      font-weight: bold;
+      border-radius: 8px;
+      font-size: 1.02rem;
+      padding: 7px 14px;
+      transition: background 0.15s;
+    }
+    .music-btn.active {
+      background: #ffe97c;
+      color: #356d23;
+    }
+    .music-label {
+      margin-bottom: 7px;
+      color: #244d68;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: .5px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Математическая игра</h1>
+    <h1>Математикалық ойын</h1>
     <div class="score-block">
-      <span>Очки: <span class="score" id="score">0</span></span>
+      <span>Ұпай: <span class="score" id="score">0</span></span>
       <span>Рекорд: <span class="score" id="highscore">0</span></span>
     </div>
-    <label>Выберите класс:</label><br>
+    <label>Сынып таңдаңыз:</label><br>
     <select id="level" onchange="changeLevel()">
-      <option value="1">1 класс (простые примеры)</option>
-      <option value="2">2 класс (чуть сложнее)</option>
-      <option value="3">3 класс (до 100)</option>
-      <option value="4">4 класс (до 500)</option>
-      <option value="5">5 класс (умножение, деление)</option>
+      <option value="1">1 сынып (жеңіл мысалдар)</option>
+      <option value="2">2 сынып (қиынырақ)</option>
+      <option value="3">3 сынып (100-ге дейін)</option>
+      <option value="4">4 сынып (500-ге дейін)</option>
+      <option value="5">5 сынып (көбейту, бөлу)</option>
     </select>
     <div class="timer" id="timer"></div>
     <div class="task" id="task"></div>
-    <input type="number" id="answer" placeholder="Ваш ответ">
+    <input type="number" id="answer" placeholder="Жауабыңыз">
     <br>
-    <button onclick="checkAnswer()" id="checkBtn">Проверить</button>
+    <button onclick="checkAnswer()" id="checkBtn">Тексеру</button>
     <p id="result"></p>
-    <button id="reset" onclick="startGame()">Следующий пример</button>
+    <button id="reset" onclick="startGame()">Келесі мысал</button>
+    <div class="music-label">Домбыра әуені:</div>
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()">Включить</button>
     <div class="records-table">
-      <h3>Таблица рекордов</h3>
+      <h3>Рекордтар кестесі</h3>
       <ul id="recordsList"></ul>
     </div>
   </div>
   <!-- Звуки -->
   <audio id="right" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12e1b4baf5.mp3"></audio>
   <audio id="wrong" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12c03e10d3.mp3"></audio>
+  <!-- Казахская домбыра (классная!) -->
+  <audio id="dombra" src="https://cdn.pixabay.com/audio/2022/08/20/audio_121b7bce08.mp3" loop></audio>
   <script>
     let correctAnswer = 0;
     let timer = null;
@@ -145,16 +170,17 @@
     let score = 0;
     let highscore = 0;
     let currentLevel = 1;
-    let timeLimits = [0, 20, 20, 25, 30, 35]; // Индексы: 1-5 класс
+    let timeLimits = [0, 20, 20, 25, 30, 35]; // 1-5 класс
+    let musicPlaying = false;
 
-    // Таблица рекордов (для каждого класса свой рекорд)
-    let records = JSON.parse(localStorage.getItem('mathRecords') || '{}');
+    // Рекорды (по классам)
+    let records = JSON.parse(localStorage.getItem('mathRecordsKZ') || '{}');
     if(!records) records = {};
 
     function updateRecordsTable() {
       let html = "";
       for(let i=1; i<=5; i++) {
-        html += `<li>${i} класс: ${records[i] || 0}</li>`;
+        html += `<li>${i} сынып: ${records[i] || 0}</li>`;
       }
       document.getElementById('recordsList').innerHTML = html;
     }
@@ -235,13 +261,13 @@
 
       // Таймер
       timeLeft = timeLimits[currentLevel];
-      document.getElementById('timer').textContent = `Осталось времени: ${timeLeft} сек`;
+      document.getElementById('timer').textContent = `Қалған уақыт: ${timeLeft} сек`;
       timer = setInterval(() => {
         timeLeft--;
-        document.getElementById('timer').textContent = `Осталось времени: ${timeLeft} сек`;
+        document.getElementById('timer').textContent = `Қалған уақыт: ${timeLeft} сек`;
         if (timeLeft <= 0) {
           clearInterval(timer);
-          document.getElementById('result').textContent = `⏰ Время вышло! Правильный ответ: ${correctAnswer}`;
+          document.getElementById('result').textContent = `⏰ Уақытың бітті! Дұрыс жауап: ${correctAnswer}`;
           document.getElementById('reset').style.display = 'inline-block';
           document.getElementById('answer').disabled = true;
           document.getElementById('checkBtn').disabled = true;
@@ -256,7 +282,7 @@
         score++;
         if(score > (records[currentLevel] || 0)) {
           records[currentLevel] = score;
-          localStorage.setItem('mathRecords', JSON.stringify(records));
+          localStorage.setItem('mathRecordsKZ', JSON.stringify(records));
           showHighscore();
         }
       } else {
@@ -275,17 +301,33 @@
       if (timer) clearInterval(timer);
       const user = Number(document.getElementById('answer').value);
       if (user === correctAnswer) {
-        document.getElementById('result').textContent = "Правильно! 👍";
+        document.getElementById('result').textContent = "Дұрыс! 👍";
         playSound('right');
         updateScore(true);
       } else {
-        document.getElementById('result').textContent = `❌ Неправильно. Ответ: ${correctAnswer}`;
+        document.getElementById('result').textContent = `❌ Қате. Дұрыс жауап: ${correctAnswer}`;
         playSound('wrong');
         updateScore(false);
       }
       document.getElementById('reset').style.display = 'inline-block';
       document.getElementById('answer').disabled = true;
       document.getElementById('checkBtn').disabled = true;
+    }
+
+    // Музыка домбры
+    function toggleMusic() {
+      let dombyra = document.getElementById('dombra');
+      let btn = document.getElementById('musicBtn');
+      if(musicPlaying) {
+        dombyra.pause();
+        btn.textContent = 'Включить';
+        btn.classList.remove('active');
+      } else {
+        dombyra.play();
+        btn.textContent = 'Выключить';
+        btn.classList.add('active');
+      }
+      musicPlaying = !musicPlaying;
     }
 
     // Инициализация
