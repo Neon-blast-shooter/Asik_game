@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Угадай число</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: linear-gradient(120deg, #c2e9fb, #81a4fd, #a1c4fd);
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 4px 24px rgba(90,130,255,0.10);
+      padding: 40px 30px;
+      max-width: 350px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 10px;
+      color: #355c7d;
+    }
+    input[type=number] {
+      font-size: 1.2rem;
+      border: 2px solid #81a4fd;
+      border-radius: 10px;
+      padding: 8px;
+      width: 80%;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border .2s;
+    }
+    input[type=number]:focus {
+      border-color: #355c7d;
+    }
+    button {
+      background: #81a4fd;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 25px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background .2s;
+      margin-bottom: 18px;
+    }
+    button:hover {
+      background: #355c7d;
+    }
+    #result {
+      font-size: 1.1rem;
+      margin: 18px 0 8px;
+      color: #333;
+      min-height: 24px;
+    }
+    #reset {
+      display: none;
+      margin-top: 10px;
+    }
+    .try {
+      color: #868686;
+      font-size: .95rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Угадай число от 1 до 100</h1>
+    <input type="number" id="guess" placeholder="Ваш вариант" min="1" max="100">
+    <br>
+    <button onclick="checkGuess()">Проверить</button>
+    <p id="result"></p>
+    <div class="try" id="try">Попыток: 0</div>
+    <button id="reset" onclick="resetGame()">Сыграть ещё раз</button>
+  </div>
+  <script>
+    let secret, tries;
+    function newGame() {
+      secret = Math.floor(Math.random() * 100) + 1;
+      tries = 0;
+      document.getElementById('result').textContent = '';
+      document.getElementById('try').textContent = 'Попыток: 0';
+      document.getElementById('guess').disabled = false;
+      document.getElementById('reset').style.display = 'none';
+      document.getElementById('guess').value = '';
+    }
+    newGame();
+
+    function checkGuess() {
+      const userGuess = Number(document.getElementById('guess').value);
+      if (!userGuess || userGuess < 1 || userGuess > 100) {
+        document.getElementById('result').textContent = 'Введите число от 1 до 100!';
+        return;
+      }
+      tries++;
+      if (userGuess === secret) {
+        document.getElementById('result').textContent = `Поздравляю! Ты угадал за ${tries} попыток.`;
+        document.getElementById('guess').disabled = true;
+        document.getElementById('reset').style.display = 'inline-block';
+      } else if (userGuess > secret) {
+        document.getElementById('result').textContent = 'Слишком много!';
+      } else {
+        document.getElementById('result').textContent = 'Слишком мало!';
+      }
+      document.getElementById('try').textContent = `Попыток: ${tries}`;
+    }
+
+    function resetGame() {
+      newGame();
+    }
+  </script>
+</body>
+</html>
