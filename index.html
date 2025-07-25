@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Угадай число</title>
+  <title>Математическая игра</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      background: linear-gradient(120deg, #c2e9fb, #81a4fd, #a1c4fd);
+      background: linear-gradient(120deg, #d0eaff, #99caff 70%);
       font-family: 'Segoe UI', sans-serif;
       min-height: 100vh;
       margin: 0;
@@ -19,29 +19,25 @@
       border-radius: 20px;
       box-shadow: 0 4px 24px rgba(90,130,255,0.10);
       padding: 40px 30px;
-      max-width: 350px;
+      max-width: 370px;
       width: 100%;
       text-align: center;
     }
     h1 {
       margin-bottom: 10px;
-      color: #355c7d;
+      color: #357da3;
     }
-    input[type=number] {
-      font-size: 1.2rem;
-      border: 2px solid #81a4fd;
-      border-radius: 10px;
-      padding: 8px;
-      width: 80%;
-      margin-bottom: 12px;
+    select, input[type=number] {
+      font-size: 1.1rem;
+      border: 2px solid #99caff;
+      border-radius: 8px;
+      padding: 7px;
+      margin-bottom: 10px;
+      width: 85%;
       outline: none;
-      transition: border .2s;
-    }
-    input[type=number]:focus {
-      border-color: #355c7d;
     }
     button {
-      background: #81a4fd;
+      background: #99caff;
       color: #fff;
       border: none;
       border-radius: 10px;
@@ -52,11 +48,11 @@
       margin-bottom: 18px;
     }
     button:hover {
-      background: #355c7d;
+      background: #357da3;
     }
     #result {
       font-size: 1.1rem;
-      margin: 18px 0 8px;
+      margin: 16px 0 8px;
       color: #333;
       min-height: 24px;
     }
@@ -64,57 +60,111 @@
       display: none;
       margin-top: 10px;
     }
-    .try {
-      color: #868686;
-      font-size: .95rem;
+    .task {
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin: 16px 0 8px;
+      color: #244d68;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Угадай число от 1 до 100</h1>
-    <input type="number" id="guess" placeholder="Ваш вариант" min="1" max="100">
+    <h1>Математическая игра</h1>
+    <label>Выберите класс:</label><br>
+    <select id="level" onchange="startGame()">
+      <option value="1">1 класс (простые примеры)</option>
+      <option value="2">2 класс (чуть сложнее)</option>
+      <option value="3">3 класс (до 100)</option>
+      <option value="4">4 класс (до 500)</option>
+      <option value="5">5 класс (умножение, деление)</option>
+    </select>
+    <div class="task" id="task"></div>
+    <input type="number" id="answer" placeholder="Ваш ответ">
     <br>
-    <button onclick="checkGuess()">Проверить</button>
+    <button onclick="checkAnswer()">Проверить</button>
     <p id="result"></p>
-    <div class="try" id="try">Попыток: 0</div>
-    <button id="reset" onclick="resetGame()">Сыграть ещё раз</button>
+    <button id="reset" onclick="startGame()">Следующий пример</button>
   </div>
   <script>
-    let secret, tries;
-    function newGame() {
-      secret = Math.floor(Math.random() * 100) + 1;
-      tries = 0;
+    let correctAnswer = 0;
+
+    function randomInt(a, b) {
+      return Math.floor(Math.random() * (b - a + 1)) + a;
+    }
+
+    function startGame() {
       document.getElementById('result').textContent = '';
-      document.getElementById('try').textContent = 'Попыток: 0';
-      document.getElementById('guess').disabled = false;
+      document.getElementById('answer').value = '';
       document.getElementById('reset').style.display = 'none';
-      document.getElementById('guess').value = '';
-    }
-    newGame();
+      const level = +document.getElementById('level').value;
+      let a, b, sign, taskText;
 
-    function checkGuess() {
-      const userGuess = Number(document.getElementById('guess').value);
-      if (!userGuess || userGuess < 1 || userGuess > 100) {
-        document.getElementById('result').textContent = 'Введите число от 1 до 100!';
-        return;
-      }
-      tries++;
-      if (userGuess === secret) {
-        document.getElementById('result').textContent = `Поздравляю! Ты угадал за ${tries} попыток.`;
-        document.getElementById('guess').disabled = true;
-        document.getElementById('reset').style.display = 'inline-block';
-      } else if (userGuess > secret) {
-        document.getElementById('result').textContent = 'Слишком много!';
+      if (level === 1) {
+        // 1 класс: только сложение, числа до 10
+        a = randomInt(1, 10);
+        b = randomInt(1, 10);
+        correctAnswer = a + b;
+        taskText = `${a} + ${b} = ?`;
+      } else if (level === 2) {
+        // 2 класс: сложение/вычитание, до 20
+        a = randomInt(5, 20);
+        b = randomInt(1, 15);
+        sign = Math.random() > 0.5 ? '+' : '-';
+        correctAnswer = sign === '+' ? a + b : a - b;
+        taskText = `${a} ${sign} ${b} = ?`;
+      } else if (level === 3) {
+        // 3 класс: сложение/вычитание, до 100
+        a = randomInt(10, 100);
+        b = randomInt(10, 100);
+        sign = Math.random() > 0.5 ? '+' : '-';
+        correctAnswer = sign === '+' ? a + b : a - b;
+        taskText = `${a} ${sign} ${b} = ?`;
+      } else if (level === 4) {
+        // 4 класс: сложение/вычитание, до 500
+        a = randomInt(100, 500);
+        b = randomInt(10, 400);
+        sign = Math.random() > 0.5 ? '+' : '-';
+        correctAnswer = sign === '+' ? a + b : a - b;
+        taskText = `${a} ${sign} ${b} = ?`;
       } else {
-        document.getElementById('result').textContent = 'Слишком мало!';
+        // 5 класс: сложение, вычитание, умножение, деление, до 100
+        const ops = ['+', '-', '×', '÷'];
+        sign = ops[randomInt(0, 3)];
+        if (sign === '+') {
+          a = randomInt(20, 100);
+          b = randomInt(10, 100);
+          correctAnswer = a + b;
+        } else if (sign === '-') {
+          a = randomInt(20, 100);
+          b = randomInt(10, a); // чтобы не было отрицательного
+          correctAnswer = a - b;
+        } else if (sign === '×') {
+          a = randomInt(2, 15);
+          b = randomInt(2, 15);
+          correctAnswer = a * b;
+        } else {
+          b = randomInt(2, 15);
+          correctAnswer = randomInt(2, 15);
+          a = correctAnswer * b; // деление без остатка
+        }
+        taskText = `${a} ${sign} ${b} = ?`;
       }
-      document.getElementById('try').textContent = `Попыток: ${tries}`;
+      document.getElementById('task').textContent = taskText;
     }
 
-    function resetGame() {
-      newGame();
+    function checkAnswer() {
+      const user = Number(document.getElementById('answer').value);
+      if (user === correctAnswer) {
+        document.getElementById('result').textContent = "Правильно! 👍";
+      } else {
+        document.getElementById('result').textContent = `Неправильно. Ответ: ${correctAnswer}`;
+      }
+      document.getElementById('reset').style.display = 'inline-block';
     }
+
+    // Запуск при загрузке страницы
+    window.onload = startGame;
   </script>
 </body>
 </html>
