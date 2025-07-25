@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Математическая игра</title>
+  <title>Математикалық ойын</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -161,8 +161,8 @@
   <!-- Звуки -->
   <audio id="right" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12e1b4baf5.mp3"></audio>
   <audio id="wrong" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12c03e10d3.mp3"></audio>
-  <!-- Казахская домбыра (классная!) -->
-  <audio id="dombra" src="https://cdn.pixabay.com/audio/2022/08/20/audio_121b7bce08.mp3" loop></audio>
+  <!-- Домбыра “Детство” (Asylbek Ensepov) -->
+  <audio id="dombra" src="https://assets.codebuckets.com/asylbek-ensepov-detstvo.mp3" loop></audio>
   <script>
     let correctAnswer = 0;
     let timer = null;
@@ -320,6 +320,7 @@
       let btn = document.getElementById('musicBtn');
       if(musicPlaying) {
         dombyra.pause();
+        dombyra.currentTime = 0;
         btn.textContent = 'Включить';
         btn.classList.remove('active');
       } else {
