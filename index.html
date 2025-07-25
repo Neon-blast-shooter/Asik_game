@@ -18,8 +18,8 @@
       background: #fff;
       border-radius: 20px;
       box-shadow: 0 4px 24px rgba(90,130,255,0.10);
-      padding: 40px 30px;
-      max-width: 370px;
+      padding: 40px 30px 30px 30px;
+      max-width: 380px;
       width: 100%;
       text-align: center;
     }
@@ -66,69 +66,150 @@
       margin: 16px 0 8px;
       color: #244d68;
     }
+    .timer {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: #e86e4a;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .score-block {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+    .score {
+      color: #357da3;
+      font-weight: bold;
+    }
+    .records-table {
+      background: #f6faff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(90,130,255,0.03);
+      margin: 16px 0 10px 0;
+      padding: 10px 7px;
+      text-align: left;
+    }
+    .records-table h3 {
+      font-size: 1rem;
+      margin: 0 0 7px 0;
+      color: #357da3;
+    }
+    .records-table ul {
+      margin: 0;
+      padding: 0 0 0 20px;
+    }
+    .records-table li {
+      font-size: 0.98rem;
+      margin-bottom: 2px;
+      color: #384e5d;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Математическая игра</h1>
+    <div class="score-block">
+      <span>Очки: <span class="score" id="score">0</span></span>
+      <span>Рекорд: <span class="score" id="highscore">0</span></span>
+    </div>
     <label>Выберите класс:</label><br>
-    <select id="level" onchange="startGame()">
+    <select id="level" onchange="changeLevel()">
       <option value="1">1 класс (простые примеры)</option>
       <option value="2">2 класс (чуть сложнее)</option>
       <option value="3">3 класс (до 100)</option>
       <option value="4">4 класс (до 500)</option>
       <option value="5">5 класс (умножение, деление)</option>
     </select>
+    <div class="timer" id="timer"></div>
     <div class="task" id="task"></div>
     <input type="number" id="answer" placeholder="Ваш ответ">
     <br>
-    <button onclick="checkAnswer()">Проверить</button>
+    <button onclick="checkAnswer()" id="checkBtn">Проверить</button>
     <p id="result"></p>
     <button id="reset" onclick="startGame()">Следующий пример</button>
+    <div class="records-table">
+      <h3>Таблица рекордов</h3>
+      <ul id="recordsList"></ul>
+    </div>
   </div>
+  <!-- Звуки -->
+  <audio id="right" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12e1b4baf5.mp3"></audio>
+  <audio id="wrong" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12c03e10d3.mp3"></audio>
   <script>
     let correctAnswer = 0;
+    let timer = null;
+    let timeLeft = 0;
+    let score = 0;
+    let highscore = 0;
+    let currentLevel = 1;
+    let timeLimits = [0, 20, 20, 25, 30, 35]; // Индексы: 1-5 класс
+
+    // Таблица рекордов (для каждого класса свой рекорд)
+    let records = JSON.parse(localStorage.getItem('mathRecords') || '{}');
+    if(!records) records = {};
+
+    function updateRecordsTable() {
+      let html = "";
+      for(let i=1; i<=5; i++) {
+        html += `<li>${i} класс: ${records[i] || 0}</li>`;
+      }
+      document.getElementById('recordsList').innerHTML = html;
+    }
+
+    function playSound(type) {
+      try {
+        if(type === 'right') document.getElementById('right').play();
+        else document.getElementById('wrong').play();
+      } catch(e) {}
+    }
 
     function randomInt(a, b) {
       return Math.floor(Math.random() * (b - a + 1)) + a;
+    }
+
+    function changeLevel() {
+      startGame();
+      showHighscore();
     }
 
     function startGame() {
       document.getElementById('result').textContent = '';
       document.getElementById('answer').value = '';
       document.getElementById('reset').style.display = 'none';
-      const level = +document.getElementById('level').value;
+      document.getElementById('answer').disabled = false;
+      document.getElementById('checkBtn').disabled = false;
+      currentLevel = +document.getElementById('level').value;
       let a, b, sign, taskText;
 
-      if (level === 1) {
-        // 1 класс: только сложение, числа до 10
+      if (timer) clearInterval(timer);
+
+      if (currentLevel === 1) {
         a = randomInt(1, 10);
         b = randomInt(1, 10);
         correctAnswer = a + b;
         taskText = `${a} + ${b} = ?`;
-      } else if (level === 2) {
-        // 2 класс: сложение/вычитание, до 20
+      } else if (currentLevel === 2) {
         a = randomInt(5, 20);
         b = randomInt(1, 15);
         sign = Math.random() > 0.5 ? '+' : '-';
         correctAnswer = sign === '+' ? a + b : a - b;
         taskText = `${a} ${sign} ${b} = ?`;
-      } else if (level === 3) {
-        // 3 класс: сложение/вычитание, до 100
+      } else if (currentLevel === 3) {
         a = randomInt(10, 100);
         b = randomInt(10, 100);
         sign = Math.random() > 0.5 ? '+' : '-';
         correctAnswer = sign === '+' ? a + b : a - b;
         taskText = `${a} ${sign} ${b} = ?`;
-      } else if (level === 4) {
-        // 4 класс: сложение/вычитание, до 500
+      } else if (currentLevel === 4) {
         a = randomInt(100, 500);
         b = randomInt(10, 400);
         sign = Math.random() > 0.5 ? '+' : '-';
         correctAnswer = sign === '+' ? a + b : a - b;
         taskText = `${a} ${sign} ${b} = ?`;
       } else {
-        // 5 класс: сложение, вычитание, умножение, деление, до 100
         const ops = ['+', '-', '×', '÷'];
         sign = ops[randomInt(0, 3)];
         if (sign === '+') {
@@ -137,7 +218,7 @@
           correctAnswer = a + b;
         } else if (sign === '-') {
           a = randomInt(20, 100);
-          b = randomInt(10, a); // чтобы не было отрицательного
+          b = randomInt(10, a);
           correctAnswer = a - b;
         } else if (sign === '×') {
           a = randomInt(2, 15);
@@ -146,25 +227,75 @@
         } else {
           b = randomInt(2, 15);
           correctAnswer = randomInt(2, 15);
-          a = correctAnswer * b; // деление без остатка
+          a = correctAnswer * b;
         }
         taskText = `${a} ${sign} ${b} = ?`;
       }
       document.getElementById('task').textContent = taskText;
+
+      // Таймер
+      timeLeft = timeLimits[currentLevel];
+      document.getElementById('timer').textContent = `Осталось времени: ${timeLeft} сек`;
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = `Осталось времени: ${timeLeft} сек`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          document.getElementById('result').textContent = `⏰ Время вышло! Правильный ответ: ${correctAnswer}`;
+          document.getElementById('reset').style.display = 'inline-block';
+          document.getElementById('answer').disabled = true;
+          document.getElementById('checkBtn').disabled = true;
+          playSound('wrong');
+          updateScore(false);
+        }
+      }, 1000);
+    }
+
+    function updateScore(isRight) {
+      if(isRight) {
+        score++;
+        if(score > (records[currentLevel] || 0)) {
+          records[currentLevel] = score;
+          localStorage.setItem('mathRecords', JSON.stringify(records));
+          showHighscore();
+        }
+      } else {
+        score = 0;
+      }
+      document.getElementById('score').textContent = score;
+      updateRecordsTable();
+    }
+
+    function showHighscore() {
+      let hs = records[currentLevel] || 0;
+      document.getElementById('highscore').textContent = hs;
     }
 
     function checkAnswer() {
+      if (timer) clearInterval(timer);
       const user = Number(document.getElementById('answer').value);
       if (user === correctAnswer) {
         document.getElementById('result').textContent = "Правильно! 👍";
+        playSound('right');
+        updateScore(true);
       } else {
-        document.getElementById('result').textContent = `Неправильно. Ответ: ${correctAnswer}`;
+        document.getElementById('result').textContent = `❌ Неправильно. Ответ: ${correctAnswer}`;
+        playSound('wrong');
+        updateScore(false);
       }
       document.getElementById('reset').style.display = 'inline-block';
+      document.getElementById('answer').disabled = true;
+      document.getElementById('checkBtn').disabled = true;
     }
 
-    // Запуск при загрузке страницы
-    window.onload = startGame;
+    // Инициализация
+    window.onload = () => {
+      score = 0;
+      updateScore(false);
+      showHighscore();
+      updateRecordsTable();
+      startGame();
+    }
   </script>
 </body>
 </html>
